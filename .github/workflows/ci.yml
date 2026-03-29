@@ -59,10 +59,6 @@ jobs:
     needs: smoke
     runs-on: ubuntu-latest
     timeout-minutes: 60
-    env:
-      COVERAGE_FILE: ${{ runner.temp }}/aebm/.coverage
-      PYTEST_BASETEMP: ${{ runner.temp }}/aebm/pytest-tmp
-      PYTEST_CACHE_DIR: ${{ runner.temp }}/aebm/pytest-cache
 
     steps:
       - name: Checkout
@@ -86,9 +82,16 @@ jobs:
       - name: Prepare CI temp directories
         shell: pwsh
         run: |
-          New-Item -ItemType Directory -Force -Path "$env:RUNNER_TEMP/aebm" | Out-Null
-          New-Item -ItemType Directory -Force -Path $env:PYTEST_BASETEMP | Out-Null
-          New-Item -ItemType Directory -Force -Path $env:PYTEST_CACHE_DIR | Out-Null
+          $ciRoot = Join-Path $env:RUNNER_TEMP 'aebm'
+          $coverageFile = Join-Path $ciRoot '.coverage'
+          $pytestBaseTemp = Join-Path $ciRoot 'pytest-tmp'
+          $pytestCacheDir = Join-Path $ciRoot 'pytest-cache'
+          New-Item -ItemType Directory -Force -Path $ciRoot | Out-Null
+          New-Item -ItemType Directory -Force -Path $pytestBaseTemp | Out-Null
+          New-Item -ItemType Directory -Force -Path $pytestCacheDir | Out-Null
+          "COVERAGE_FILE=$coverageFile" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "PYTEST_BASETEMP=$pytestBaseTemp" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "PYTEST_CACHE_DIR=$pytestCacheDir" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
       - name: Run D1 tests with coverage gate
         shell: pwsh
