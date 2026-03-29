@@ -1,0 +1,11 @@
+﻿name: legacy-workflow-disabled
+
+on:
+  workflow_dispatch:
+
+jobs:
+  notice:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Legacy workflow disabled
+        run: echo "Use .github/workflows/ci.yml instead."

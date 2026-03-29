@@ -1,0 +1,111 @@
+name: ci
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  PYTHON_VERSION: "3.12"
+  MIN_COVERAGE: "20"
+  D3_MIN_MICRO_F1: "0.65"
+
+jobs:
+  smoke:
+    name: smoke (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: |
+            requirements.lock
+            requirements.txt
+
+      - name: Install dependencies
+        shell: pwsh
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.lock
+
+      - name: Preflight quick
+        shell: pwsh
+        run: |
+          python scripts/preflight.py --quick
+
+  quality-gates:
+    name: quality-gates (ubuntu)
+    needs: smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      COVERAGE_FILE: ${{ runner.temp }}/aebm/.coverage
+      PYTEST_BASETEMP: ${{ runner.temp }}/aebm/pytest-tmp
+      PYTEST_CACHE_DIR: ${{ runner.temp }}/aebm/pytest-cache
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: |
+            requirements.lock
+            requirements.txt
+
+      - name: Install dependencies
+        shell: pwsh
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.lock
+
+      - name: Prepare CI temp directories
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path "$env:RUNNER_TEMP/aebm" | Out-Null
+          New-Item -ItemType Directory -Force -Path $env:PYTEST_BASETEMP | Out-Null
+          New-Item -ItemType Directory -Force -Path $env:PYTEST_CACHE_DIR | Out-Null
+
+      - name: Run D1 tests with coverage gate
+        shell: pwsh
+        run: |
+          python -m pytest -c pytest.ini tests_d1 --basetemp "$env:PYTEST_BASETEMP" -o "cache_dir=$env:PYTEST_CACHE_DIR" --cov=src --cov=ui --cov-report=term-missing --cov-report=xml:coverage.xml --cov-fail-under=${{ env.MIN_COVERAGE }} -q
+
+      - name: Run D3 quality gate
+        shell: pwsh
+        run: |
+          python scripts/eval_d3.py --enforce-gate --min-micro-f1 ${{ env.D3_MIN_MICRO_F1 }}
+
+      - name: Upload CI artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-artifacts
+          path: |
+            coverage.xml
+            outputs/evaluation/d3/**/*.json
+          if-no-files-found: ignore
