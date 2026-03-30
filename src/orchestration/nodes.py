@@ -25,7 +25,7 @@ from src.scoring.global_scorer import GlobalScientificScorer
 # ==========================================
 print("⚙️  Système : Initialisation des agents experts...")
 job_parser = JobParserAgent()
-expander = KnowledgeExpander()
+expander = None
 bridge_agent = BridgeAgent()
 auditor_agent = CynicalAuditor()
 psy_agent = PsychometricAgent()
@@ -34,6 +34,26 @@ pref_agent = PreferenceAgent()
 cv_advisor_agent = IndustryCVAdvisorAgent()
 role_recommender_agent = RoleRecommenderAgent()
 global_scorer = GlobalScientificScorer()
+
+
+def _env_flag(name: str, default: str = "0") -> bool:
+    return os.getenv(name, default).strip().lower() in {"1", "true", "yes", "on"}
+
+
+class StableKnowledgeExpander:
+    def __init__(self):
+        self._delegate = None
+
+    def learn_and_expand(self, skills, job_context):
+        if not _env_flag("AEBM_ENABLE_GRAPH_LEARNING", "0"):
+            print("    Apprentissage Neo4j desactive pour des resultats live stables.")
+            return {}
+        if self._delegate is None:
+            self._delegate = KnowledgeExpander()
+        return self._delegate.learn_and_expand(skills, job_context)
+
+
+expander = StableKnowledgeExpander()
 
 def llm_retry_policy():
     return retry(

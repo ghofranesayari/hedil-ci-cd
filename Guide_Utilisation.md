@@ -22,6 +22,8 @@ Vous devez remplir:
 - `NEO4J_USER`
 - `NEO4J_PASSWORD`
 - `GROQ_API_KEY`
+- `AEBM_HYDE_TEMPERATURE=0.0`
+- `AEBM_ENABLE_GRAPH_LEARNING=0`
 
 Exemple:
 ```env
@@ -31,11 +33,14 @@ NEO4J_USER=neo4j
 NEO4J_PASSWORD=YOUR_AURA_PASSWORD
 GROQ_API_KEY=YOUR_GROQ_API_KEY
 LLM_MODEL=llama-3.3-70b-versatile
+AEBM_HYDE_TEMPERATURE=0.0
+AEBM_ENABLE_GRAPH_LEARNING=0
 ```
 
 Important:
 - Le fichier doit s'appeler exactement `.env` (pas `.env.txt`).
 - En mode Cloud, Docker n'est pas utilise.
+- Pour une demo plus stable, laisser `AEBM_HYDE_TEMPERATURE=0.0` et `AEBM_ENABLE_GRAPH_LEARNING=0`.
 
 ## 4. Installation automatique (une seule fois)
 Dans PowerShell, depuis la racine du projet:

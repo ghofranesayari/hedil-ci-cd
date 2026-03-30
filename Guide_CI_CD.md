@@ -45,6 +45,8 @@ Secrets attendus:
 - `NEO4J_PASSWORD`
 - `GROQ_API_KEY`
 - `LLM_MODEL=llama-3.3-70b-versatile`
+- `AEBM_HYDE_TEMPERATURE=0.0`
+- `AEBM_ENABLE_GRAPH_LEARNING=0`
 
 ## 4. Flux recommande
 1. ouvrir une PR
@@ -57,3 +59,4 @@ Secrets attendus:
 - le lockfile est maintenant compatible Linux/Windows pour `pywin32`
 - les tests CI utilisent des repertoires temporaires isoles pour eviter les conflits sur `.coverage` et `pytest` temp/cache
 - `scripts/test_d1.ps1` reutilise la meme logique de repertoires temporaires pour les executions locales
+- pour une demo plus stable, garder `AEBM_HYDE_TEMPERATURE=0.0` et `AEBM_ENABLE_GRAPH_LEARNING=0` sur Streamlit

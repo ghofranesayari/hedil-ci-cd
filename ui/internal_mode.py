@@ -5,7 +5,7 @@ from pathlib import Path
 import streamlit as st
 
 from src.ingestion.parser import ContentParser
-from src.memory.hyde import HydeGenerator
+from src.memory.hyde_runtime import HydeGenerator
 from src.memory.vector_db import VectorDBManager
 from src.scoring.report import ReportGenerator
 from ui.shared import cleanup_temp_dir, remove_temp_file, save_temp_file
